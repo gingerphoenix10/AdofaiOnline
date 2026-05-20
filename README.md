@@ -1,0 +1,7 @@
+# ADOFAI Online
+This is an experimental BepInEx plugin made for [A Dance of Fire and Ice](https://store.steampowered.com/app/977950/A_Dance_of_Fire_and_Ice/) by [7th Beat Games](https://github.com/7thbeatgames/) that aims to add full online support to the game's Local Multiplayer mode through [Steam Networking](https://partner.steamgames.com/doc/features/multiplayer/networking)
+
+Notes:
+- The mod is still in very early development, with messy code and many bugs. These will (hopefully) be sorted with time
+- This currently requires the Alpha branch of ADOFAI, since Local co-op isn't released to the main branch yet
+- Requires [BepInEx](https://github.com/bepinex/bepinex) instead of ADOFAI's traditional UnityModManager due to crashes with UMM on the latest version of the Alpha branch
