@@ -1,5 +1,7 @@
 ﻿using DG.Tweening;
 using HarmonyLib;
+using BepInEx;
+using BepInEx.Logging;
 using MonoMod.RuntimeDetour;
 using Steamworks;
 using System;
