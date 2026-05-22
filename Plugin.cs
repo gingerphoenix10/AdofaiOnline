@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Logging;
-using DG.Tweening;
+﻿using DG.Tweening;
 using HarmonyLib;
 using MonoMod.RuntimeDetour;
 using Steamworks;
@@ -13,21 +11,25 @@ using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Text;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 using static NewsSign;
 using static UnityEngine.Analytics.IAnalytic;
 
 namespace AdofaiOnline;
 
-[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 public class Plugin : BaseUnityPlugin
 {
     internal static new ManualLogSource Logger;
     private static readonly Harmony Patcher = new(MyPluginInfo.PLUGIN_GUID);
     public Callback<SteamNetConnectionStatusChangedCallback_t> statusChanged;
+    public Callback<LobbyCreated_t> lobbyCreated;
+    public Callback<GameLobbyJoinRequested_t> joinRequested;
+    public Callback<LobbyEnter_t> lobbyEntered;
+    public static CSteamID LobbyID;
     public static Dictionary<HSteamNetConnection, PlayerInfo> clients = new();
     public static byte playerCount = 1;
     public static PlayerInfo localPlayer = new(0x00);
@@ -40,6 +42,9 @@ public class Plugin : BaseUnityPlugin
         Patcher.PatchAll();
         DontDestroyOnLoad(new GameObject("steam").AddComponent<SteamManager>());
         statusChanged = Callback<SteamNetConnectionStatusChangedCallback_t>.Create(OnStatusChanged);
+        lobbyCreated = Callback<LobbyCreated_t>.Create(OnLobbyCreated);
+        joinRequested = Callback<GameLobbyJoinRequested_t>.Create(OnGameLobbyJoinRequested);
+        lobbyEntered = Callback<LobbyEnter_t>.Create(OnLobbyEntered);
     }
 
     private void OnStatusChanged(SteamNetConnectionStatusChangedCallback_t callback)
@@ -65,6 +70,7 @@ public class Plugin : BaseUnityPlugin
                     Debug.Log("Connected!");
                     if (isHost)
                         return;
+                    ADOBase.controller.Restart();
                     byte[] data = new byte[1] { (byte)PacketType.Welcome };
                     SendToHost(data);
                     break;
@@ -100,10 +106,41 @@ public class Plugin : BaseUnityPlugin
                         ChangePlayerCount(1);
                         localPlayer = new(0x00);
                     }
-
+                    ADOBase.controller.Restart();
                     break;
                 }
         }
+    }
+
+    private void OnLobbyCreated(LobbyCreated_t callback)
+    {
+        if (callback.m_eResult != EResult.k_EResultOK)
+        {
+            Debug.LogError($"Lobby creation failed: {callback.m_eResult}");
+            return;
+        }
+
+        LobbyID = new CSteamID(callback.m_ulSteamIDLobby);
+
+        Plugin.Logger.LogInfo($"Lobby created: {LobbyID}");
+
+        SteamFriends.ActivateGameOverlayInviteDialog(LobbyID);
+    }
+
+    private static void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
+    {
+        SteamMatchmaking.JoinLobby(callback.m_steamIDLobby);
+    }
+
+    private static void OnLobbyEntered(LobbyEnter_t callback)
+    {
+        CSteamID lobbyId = new CSteamID(callback.m_ulSteamIDLobby);
+
+        CSteamID hostId =
+            SteamMatchmaking.GetLobbyOwner(lobbyId);
+
+        if (!isHost)
+            ConnectSteam(hostId);
     }
 
     // host stuff
@@ -122,8 +159,22 @@ public class Plugin : BaseUnityPlugin
         pollGroup = SteamNetworkingSockets.CreatePollGroup();
 
         Debug.Log($"Hosting on port {port}");
+        ADOBase.controller.Restart();
     }
 
+    public static void HostSteam(int virtualPort)
+    {
+        isHost = true;
+
+        listenSocket = SteamNetworkingSockets.CreateListenSocketP2P(virtualPort, 0, null);
+
+        pollGroup = SteamNetworkingSockets.CreatePollGroup();
+
+        Debug.Log($"Hosting on virtual port {virtualPort}");
+
+        SteamAPICall_t createLobbyCall = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
+        //ADOBase.controller.Restart();
+    }
 
     public static HSteamNetConnection? connection = null;
 
@@ -141,6 +192,25 @@ public class Plugin : BaseUnityPlugin
         Debug.Log("Connecting...");
     }
 
+    public static void ConnectSteam(CSteamID hostSteamId)
+    {
+        isHost = false;
+
+        SteamNetworkingIdentity identity = new SteamNetworkingIdentity();
+        identity.SetSteamID(hostSteamId);
+
+        connection = SteamNetworkingSockets.ConnectP2P(ref identity, 0, 0, null);
+        pollGroup = SteamNetworkingSockets.CreatePollGroup();
+
+        if (connection == HSteamNetConnection.Invalid)
+        {
+            Debug.LogError("Failed to create P2P connection");
+            return;
+        }
+
+        Debug.Log($"Connecting to host: {hostSteamId}");
+    }
+
     public static void SendToHost(byte[] data, int flags = Constants.k_nSteamNetworkingSend_Reliable)
     {
         if (isHost)
@@ -156,6 +226,8 @@ public class Plugin : BaseUnityPlugin
     {
         if (data.Length == 0)
             return;
+
+        Plugin.Logger.LogInfo(BitConverter.ToString(data));
 
         if (data[0] == (byte)PacketType.Welcome)
         {
@@ -274,7 +346,8 @@ public class Plugin : BaseUnityPlugin
                         if (planet.currfloor != flr && flr != null)
                         {
                             scrPlanetPatch.forcedTilePos = pos;
-                            Physics2DPatch.forcedOutput = new Collider2D[] { flr.coll };
+                            Plugin.Logger.LogInfo(flr.transform.GetComponent<Collider2D>());
+                            Physics2DPatch.forcedOutput = new Collider2D[] { flr.transform.GetComponent<Collider2D>() };
                             plr.Hit();
                             //planet.transform.position = flr.transform.position;
                             planet.currfloor = flr;
@@ -735,6 +808,7 @@ internal static class PauseMenuPatch
     [HarmonyPatch(nameof(PauseMenu.ShowPlayerSelect))]
     internal static bool ShowPlayerSelectPrefix()
     {
+        return true;
         bool isHosting = Plugin.listenSocket != null || Plugin.connection != null;
         if (!isHosting)
             Plugin.Host(7777);
@@ -833,14 +907,59 @@ internal static class Physics2DPatch
 {
     public static Collider2D[] forcedOutput = null;
     [HarmonyPrefix]
-    [HarmonyPatch(nameof(Physics2D.OverlapPointAll), new Type[] {typeof(Vector2), typeof(int)})]
-    internal static bool OverlapPointAllPrefix()
+    [HarmonyPatch(nameof(Physics2D.OverlapPointAll), new Type[] { typeof(Vector2), typeof(int) })]
+    internal static bool OverlapPointAllPrefix(ref Collider2D[] __result)
     {
         if (forcedOutput != null)
         {
+            __result = forcedOutput;
             forcedOutput = null;
             return false;
         }
         return true;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerSelect))]
+internal static class PlayerSelectPatch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(PlayerSelect.Setup))]
+    internal static void SetupPrefix(PlayerSelect __instance)
+    {
+        GameObject onlineButtons = new GameObject("onlineButtons");
+        onlineButtons.transform.SetParent(__instance.transform);
+        onlineButtons.transform.localScale = Vector3.one;
+        onlineButtons.transform.localPosition = new Vector3(0, -65);
+
+        GameObject hostButton = GameObject.Instantiate(__instance.buttons[0].gameObject, onlineButtons.transform);
+        hostButton.transform.localPosition = __instance.buttons[0].transform.localPosition + (__instance.buttons[1].transform.localPosition - __instance.buttons[0].transform.localPosition) / 2;
+        hostButton.transform.Find("fill/1player/sign").gameObject.SetActive(false);
+        Transform hostLabel = hostButton.transform.Find("fill/1player/onePlayer");
+        GameObject.DestroyImmediate(hostLabel.gameObject.GetComponent<Image>());
+        TextMeshProUGUI hostText = hostLabel.gameObject.AddComponent<TextMeshProUGUI>();
+        hostText.horizontalAlignment = HorizontalAlignmentOptions.Center;
+        hostText.verticalAlignment = VerticalAlignmentOptions.Middle;
+        hostText.text = "Host";
+        hostText.fontSize = 25;
+
+        Button hostClick = hostButton.GetComponent<Button>();
+        hostClick.onClick = new();
+        hostClick.onClick.AddListener(() => Plugin.Host(7777));
+
+        GameObject joinButton = GameObject.Instantiate(__instance.buttons[0].gameObject, onlineButtons.transform);
+        joinButton.transform.localPosition = __instance.buttons[2].transform.localPosition + (__instance.buttons[3].transform.localPosition - __instance.buttons[2].transform.localPosition) / 2;
+        joinButton.transform.Find("fill/1player/sign").gameObject.SetActive(false);
+        Transform joinLabel = joinButton.transform.Find("fill/1player/onePlayer");
+        GameObject.DestroyImmediate(joinLabel.gameObject.GetComponent<Image>());
+        TextMeshProUGUI joinText = joinLabel.gameObject.AddComponent<TextMeshProUGUI>();
+        joinText.horizontalAlignment = HorizontalAlignmentOptions.Center;
+        joinText.verticalAlignment = VerticalAlignmentOptions.Middle;
+        joinText.text = "Join";
+        joinText.fontSize = 25;
+
+        Button joinClick = joinButton.GetComponent<Button>();
+        joinClick.onClick = new();
+        joinClick.onClick.AddListener(() => Plugin.Connect("127.0.0.1", 7777));
     }
 }
