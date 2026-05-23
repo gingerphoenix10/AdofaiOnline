@@ -114,7 +114,7 @@ public static class Networking
         if (data.Length == 0)
             return;
 
-        Plugin.Logger.LogInfo(BitConverter.ToString(data));
+        //Plugin.Logger.LogInfo(BitConverter.ToString(data));
 
         if (data[0] == (byte)PacketType.Welcome)
         {
@@ -217,7 +217,7 @@ public static class Networking
 
                 if (!ADOBase.controller.gameworld && data[2] == 0x00)
                 {
-                    Plugin.Logger.LogInfo($"Update from {data[1]}");
+                    //Plugin.Logger.LogInfo($"Update from {data[1]}");
 
                     Vector3 pos;
 
@@ -239,12 +239,11 @@ public static class Networking
                             Plugin.Logger.LogInfo(flr.transform.GetComponent<Collider2D>().ToString());
                             Physics2DPatch.forcedOutput = new Collider2D[] { flr.transform.GetComponent<Collider2D>() };
                             plr.Hit();
-                            planet = planets.chosenPlanet;
+                            planet = planets.chosenPlanet; // Hit() sets chosenPlanet (the one on the ground) to be the previously rotating planet that's now grounded. Update our shorthand
                             planet.currfloor = flr;
                             planet.transform.position = flr.transform.position;
                             Plugin.Logger.LogInfo($"Reported angle is {angle} when we thought it was {planet.angle}. Adjusting by {angle - planet.angle} so offset becomes {planet.snappedLastAngle + (angle - planet.angle)}");
                             planet.snappedLastAngle += angle - planet.angle;
-                            // idk I saw somewhere else in the game, teleporting moved 1 unit down
                         }
                     }
                 }
@@ -253,7 +252,7 @@ public static class Networking
                     HitMargin margin = (HitMargin)data[3];
                     int seqId = BitConverter.ToInt32(data, 4);
                     float exitAngle = BitConverter.ToSingle(data, 4 + sizeof(int));
-                    Plugin.Logger.LogInfo($"Floor {seqId}, exitAngle {exitAngle}");
+                    //Plugin.Logger.LogInfo($"Floor {seqId}, exitAngle {exitAngle}");
 
                     scrFloor floor = ADOBase.lm.listFloors[seqId];
                     //plr.planetarySystem.chosenPlanet.MoveToNextFloor(floor, exitAngle, margin);
@@ -270,8 +269,14 @@ public static class Networking
                 ChangePlayerCount(data[2]);
                 break;
             case (byte)PacketType.Die:
+                bool overload = Convert.ToBoolean(data[2]);
+                bool multipress = Convert.ToBoolean(data[3]);
+                bool hitbox = Convert.ToBoolean(data[4]);
+                byte[] failMessageBytes = new byte[data.Length-5];
+                Buffer.BlockCopy(data, 5, failMessageBytes, 0, failMessageBytes.Length);
                 scrPlayerPatch.remoteDeath = true;
-                plr.Die();
+                Plugin.Logger.LogInfo($"Received death: {overload}, {multipress}, {hitbox}, {Encoding.UTF8.GetString(failMessageBytes)}, {plr.auto}");
+                plr.Die(overload, multipress, Encoding.UTF8.GetString(failMessageBytes), hitbox);
                 break;
             case (byte)PacketType.ChangeScene:
                 SceneManagerPatch.remote = true;

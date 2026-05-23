@@ -167,19 +167,27 @@ internal static class scrPlayerPatch
     public static bool remoteDeath = false;
     [HarmonyPrefix]
     [HarmonyPatch(nameof(scrPlayer.Die))]
-    internal static bool DiePrefix(scrPlayer __instance)
+    internal static bool DiePrefix(scrPlayer __instance, bool overload, bool multipress, string failMessage, bool hitbox)
     {
         if (Networking.connection == null && Networking.listenSocket == null)
             return true;
 
-        if (__instance.playerID == Networking.localPlayer.PlayerID)
+        if (__instance.playerID == Networking.localPlayer.PlayerID && !__instance.auto)
         {
-            byte[] data = new byte[1] { (byte)PacketType.Die };
+            byte[] data = new byte[4 + failMessage.Length];
+            data[0] = (byte)PacketType.Die;
+            data[1] = Convert.ToByte(overload);
+            data[2] = Convert.ToByte(multipress);
+            data[3] = Convert.ToByte(hitbox);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(failMessage), 0, data, 4, failMessage.Length);
+            Plugin.Logger.LogInfo($"Sending Death: {overload}, {multipress}, {hitbox}, {failMessage}, {__instance.auto}");
             Networking.SendToHost(data);
             return true;
         }
         else if (remoteDeath)
         {
+            RDC.auto = false;
+            __instance.invincibilityTimer = 0f;
             remoteDeath = false;
             return true;
         }
