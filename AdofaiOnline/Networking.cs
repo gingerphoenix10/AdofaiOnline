@@ -1,4 +1,4 @@
-﻿using Steamworks;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +38,7 @@ public static class Networking
 
         pollGroup = SteamNetworkingSockets.CreatePollGroup();
 
-        Debug.Log($"Hosting on port {port}");
+        Plugin.Logger.LogInfo($"Hosting on port {port}");
         ADOBase.controller.Restart();
     }
 
@@ -50,7 +50,7 @@ public static class Networking
 
         pollGroup = SteamNetworkingSockets.CreatePollGroup();
 
-        Debug.Log($"Hosting on virtual port {virtualPort}");
+        Plugin.Logger.LogInfo($"Hosting on virtual port {virtualPort}");
 
         SteamAPICall_t createLobbyCall = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
         //ADOBase.controller.Restart();
@@ -67,7 +67,7 @@ public static class Networking
         connection = SteamNetworkingSockets.ConnectByIPAddress(ref addr, 0, null);
         pollGroup = SteamNetworkingSockets.CreatePollGroup();
 
-        Debug.Log("Connecting...");
+        Plugin.Logger.LogInfo("Connecting...");
     }
 
     public static void ConnectSteam(CSteamID hostSteamId)
@@ -82,11 +82,11 @@ public static class Networking
 
         if (connection == HSteamNetConnection.Invalid)
         {
-            Debug.LogError("Failed to create P2P connection");
+            Plugin.Logger.LogInfoError("Failed to create P2P connection");
             return;
         }
 
-        Debug.Log($"Connecting to host: {hostSteamId}");
+        Plugin.Logger.LogInfo($"Connecting to host: {hostSteamId}");
     }
 
     public static void SendToHost(byte[] data, int flags = Constants.k_nSteamNetworkingSend_Reliable)
