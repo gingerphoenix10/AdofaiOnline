@@ -1,0 +1,11 @@
+{
+  "Id": "AdofaiOnline",
+  "DisplayName": "AdofaiOnline",
+  "Author": "gingerphoenix10",
+  "Version": "$VERSION",
+  "ManagerVersion": "0.22.14.0",
+  "AssemblyName": "AdofaiOnline.dll",
+  "EntryMethod": "AdofaiOnline.Startup.Load",
+  "HomePage": "https://gingerphoenix10.com/AdofaiOnline",
+  "Repository": "https://github.com/gingerphoenix10/AdofaiOnline"
+}
