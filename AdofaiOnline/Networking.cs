@@ -27,6 +27,8 @@ public static class Networking
     // Client
     public static HSteamNetConnection? connection = null;
 
+    public static bool IsConnected => listenSocket != null || connection != null;
+
     public static void Host(ushort port)
     {
         isHost = true;
@@ -82,7 +84,7 @@ public static class Networking
 
         if (connection == HSteamNetConnection.Invalid)
         {
-            Plugin.Logger.LogInfoError("Failed to create P2P connection");
+            Plugin.Logger.LogError("Failed to create P2P connection");
             return;
         }
 
@@ -97,6 +99,12 @@ public static class Networking
         }
         else
         {
+            if (connection == null)
+            {
+                Plugin.Logger.LogWarning("Attempted send while disconnected");
+                Plugin.Logger.LogWarning(Environment.StackTrace);
+                return;
+            }
             SendToConnection(connection.Value, data, flags, out _);
         }
     }
@@ -187,7 +195,7 @@ public static class Networking
                 PacketEvent(newData);
             foreach (HSteamNetConnection client in clients.Keys)
             {
-                if (client == msg.m_conn/* && newData[0] != (byte)PacketType.GetReady*/)
+                if (client == msg.m_conn /* && newData[0] != (byte)PacketType.GetReady*/)
                     continue;
                 SendToConnection(client, newData, msg.m_nFlags, out _);
             }
@@ -198,7 +206,7 @@ public static class Networking
         }
     }
 
-    public static void PacketEvent(byte[] data)
+    public static async void PacketEvent(byte[] data)
     {
         scrPlayer plr = ADOBase.playerManager.allPlayers[(int)data[1]];
         switch (data[0])
@@ -216,6 +224,7 @@ public static class Networking
                     float x = BitConverter.ToSingle(data, 3 + 0 * sizeof(float));
                     float y = BitConverter.ToSingle(data, 3 + 1 * sizeof(float));
                     float z = BitConverter.ToSingle(data, 3 + 2 * sizeof(float));
+                    double angle = BitConverter.ToDouble(data, 3 + 3 * sizeof(float));
 
                     pos = new Vector3(x, y, z);
                     Plugin.Logger.LogInfo(pos.ToString());
@@ -230,8 +239,12 @@ public static class Networking
                             Plugin.Logger.LogInfo(flr.transform.GetComponent<Collider2D>().ToString());
                             Physics2DPatch.forcedOutput = new Collider2D[] { flr.transform.GetComponent<Collider2D>() };
                             plr.Hit();
-                            //planet.transform.position = flr.transform.position;
+                            planet = planets.chosenPlanet;
                             planet.currfloor = flr;
+                            planet.transform.position = flr.transform.position;
+                            Plugin.Logger.LogInfo($"Reported angle is {angle} when we thought it was {planet.angle}. Adjusting by {angle - planet.angle} so offset becomes {planet.snappedLastAngle + (angle - planet.angle)}");
+                            planet.snappedLastAngle += angle - planet.angle;
+                            // idk I saw somewhere else in the game, teleporting moved 1 unit down
                         }
                     }
                 }
@@ -301,7 +314,6 @@ public static class Networking
     {
         playerCount = count;
         scrPlayerManager.SetPlayerCount(count);
-        Plugin.Logger.LogInfo("Changed");
         //ADOBase.controller.Restart();
         SceneManager.LoadScene("scnLevelSelect");
     }

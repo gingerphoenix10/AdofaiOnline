@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'BepInEx'"> <!-- BepInEx PropertyGroup -->
-		<DefineConstants>BEPIN</DefineConstants>
+      <DefineConstants>BEPIN;DEBUG</DefineConstants>
 	  <TargetFramework>netstandard2.1</TargetFramework>
 	  <AssemblyName>AdofaiOnline</AssemblyName>
 	  <Product>AdofaiOnline</Product>

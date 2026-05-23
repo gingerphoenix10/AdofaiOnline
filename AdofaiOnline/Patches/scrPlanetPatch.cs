@@ -68,7 +68,7 @@ internal static class scrPlanetPatch
     [HarmonyPatch(nameof(scrPlanet.MoveToNextFloor))]
     internal static void MoveToNextFloorPrefix(scrPlanet __instance, scrFloor floor, float exitAngle, HitMargin hitMargin)
     {
-        if (Networking.connection == null && Networking.listenSocket == null)
+        if (!Networking.IsConnected)
             return;
 
         if (__instance.player.playerID == Networking.localPlayer.PlayerID)
@@ -80,6 +80,17 @@ internal static class scrPlanetPatch
             Buffer.BlockCopy(BitConverter.GetBytes(floor.seqID), 0, data, 3, sizeof(int));
             Buffer.BlockCopy(BitConverter.GetBytes(exitAngle), 0, data, 3 + sizeof(int), sizeof(float));
             Networking.SendToHost(data);
+        }
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
+    internal static void SwitchChosenPostfix(scrPlanet __instance)
+    {
+        if (forcedTilePos.HasValue)
+        {
+            __instance.transform.position = forcedTilePos.Value;
+            forcedTilePos = null;
         }
     }
 }

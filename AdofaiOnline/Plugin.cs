@@ -24,6 +24,11 @@ public class Plugin : BaseUnityPlugin
         GameObject.DontDestroyOnLoad(callbackHandler = new GameObject().AddComponent<SteamManager>());
         Callbacks.InitializeCallbacks();
     }
+
+    public void HitTest()
+    {
+        ADOBase.playerManager.allPlayers[0].planetarySystem.chosenPlanet = ADOBase.playerManager.allPlayers[0].planetarySystem.chosenPlanet.SwitchChosen();
+    }
 }
 #else
 public static class Plugin

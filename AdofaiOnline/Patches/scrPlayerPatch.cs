@@ -207,7 +207,7 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.Update))]
     internal static void UpdatePostfix(scrPlayer __instance)
     {
-        if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance)
+        if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance || !Networking.IsConnected)
             return;
 
         if (ADOBase.playerManager.players.Length != Networking.playerCount && !ADOBase.loader.isWipingToBlack)
@@ -218,13 +218,14 @@ internal static class scrPlayerPatch
             if (__instance.currFloor != null && __instance.currFloor != lastFloor)
             {
                 lastFloor = __instance.currFloor;
-                byte[] data = new byte[sizeof(float) * 3 + 2]; // 3 floats, plus one byte for packet type and one for level type
+                byte[] data = new byte[2 + sizeof(float) * 4 + sizeof(double) * 1]; // 3 floats, plus one byte for packet type, one for level type, and one for current angle
 
                 data[0] = (byte)PacketType.Update;
                 data[1] = 0x00;
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.currFloor.transform.position.x), 0, data, 0 * sizeof(float) + 2, sizeof(float));
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.currFloor.transform.position.y), 0, data, 1 * sizeof(float) + 2, sizeof(float));
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.currFloor.transform.position.z), 0, data, 2 * sizeof(float) + 2, sizeof(float));
+                Buffer.BlockCopy(BitConverter.GetBytes(__instance.planetarySystem.chosenPlanet.angle), 0, data, 3 * sizeof(float) + 2, sizeof(double));
                 Networking.SendToHost(data, Constants.k_nSteamNetworkingSend_Unreliable);
             }
         }
@@ -235,11 +236,8 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.Revive))]
     internal static bool RevivePrefix(scrPlayer __instance, int floorID, scrPlayer helperPlayer)
     {
-        if (Networking.connection == null && Networking.listenSocket == null)
-        {
-            Plugin.Logger.LogInfo("Not connected");
+        if (!Networking.IsConnected)
             return true;
-        }
 
         if (helperPlayer.playerID == Networking.localPlayer.PlayerID || (helperPlayer == null && Networking.isHost))
         {
@@ -248,16 +246,13 @@ internal static class scrPlayerPatch
             data[1] = (byte)__instance.playerID;
             Buffer.BlockCopy(BitConverter.GetBytes(floorID), 0, data, 2, sizeof(int));
             Networking.SendToHost(data, Constants.k_nSteamNetworkingSend_Unreliable);
-            Plugin.Logger.LogInfo("Sending");
             return true;
         }
         else if (remoteRevive)
         {
-            Plugin.Logger.LogInfo("Reviving" + ((byte)__instance.playerID == Networking.localPlayer.PlayerID ? " self" : ""));
             remoteRevive = false;
             return true;
         }
-        Plugin.Logger.LogInfo("noneoftheabove");
         return false;
     }
 

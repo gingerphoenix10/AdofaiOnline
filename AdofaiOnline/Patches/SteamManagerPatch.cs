@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using static ADOFAI.Common.Platform.Mac.PlatformHelperMac;
 
 namespace AdofaiOnline.Patches;
 
@@ -32,7 +33,7 @@ internal static class SteamManagerPatch
             byte[] data = new byte[msg.m_cbSize];
             Marshal.Copy(msg.m_pData, data, 0, data.Length);
             Networking.HandlePacket(data, msg);
-            //Marshal.Release(msg.m_pData);
+            SteamNetworkingMessage_t.Release(messages[i]);
         }
     }
 }

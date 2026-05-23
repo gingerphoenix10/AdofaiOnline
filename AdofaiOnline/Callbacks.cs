@@ -92,10 +92,9 @@ public static class Callbacks
                     {
                         Networking.connection = null;
                         Networking.pollGroup = null;
-                        Networking.ChangePlayerCount(1);
                         Networking.localPlayer = new(0x00);
+                        Networking.ChangePlayerCount(1);
                     }
-                    ADOBase.controller.Restart();
                     break;
                 }
         }
