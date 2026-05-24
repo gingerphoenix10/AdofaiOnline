@@ -19,7 +19,7 @@ internal static class SceneManagerPatch
     {
         if (!remote)
         {
-            byte[] levelData = new byte[1 + GCS.internalLevelName.Length];
+            byte[] levelData = new byte[1 + (GCS.internalLevelName == null ? 0 : GCS.internalLevelName.Length)];
             levelData[0] = (byte)PacketType.SetLevel;
             Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
             Networking.SendToHost(levelData);
@@ -39,7 +39,7 @@ internal static class SceneManagerPatch
     {
         if (!remote)
         {
-            byte[] levelData = new byte[1 + GCS.internalLevelName==null?0:GCS.internalLevelName.Length];
+            byte[] levelData = new byte[1 + (GCS.internalLevelName==null?0:GCS.internalLevelName.Length)];
             levelData[0] = (byte)PacketType.SetLevel;
             if (GCS.internalLevelName != null)
                 Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
