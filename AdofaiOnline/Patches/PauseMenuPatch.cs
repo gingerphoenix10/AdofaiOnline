@@ -34,23 +34,25 @@ internal static class PauseMenuPatch
     [HarmonyPatch(nameof(PauseMenu.Show))]
     internal static void ShowPostfix()
     {
-        if (!remotePause)
+        if (remotePause)
         {
-            byte[] data = new byte[2] { (byte)PacketType.Pause, 0x01 };
-            Networking.SendToHost(data);
+            remotePause = false;
+            return;
         }
-        remotePause = false;
+        byte[] data = new byte[2] { (byte)PacketType.Pause, 0x01 };
+        Networking.SendToHost(data);
     }
 
     [HarmonyPostfix]
     [HarmonyPatch(nameof(PauseMenu.Hide))]
     internal static void HidePostfix()
     {
-        if (!remotePause)
+        if (remotePause)
         {
-            byte[] data = new byte[2] { (byte)PacketType.Pause, 0x00 };
-            Networking.SendToHost(data);
+            remotePause = false;
+            return;
         }
-        remotePause = false;
+        byte[] data = new byte[2] { (byte)PacketType.Pause, 0x00 };
+        Networking.SendToHost(data);
     }
 }
