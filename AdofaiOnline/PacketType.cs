@@ -16,5 +16,6 @@ public enum PacketType : byte
     Revive = 0x05,
     GetReady = 0x06,
     SetLevel = 0x07,
-    Pause = 0x08
+    Pause = 0x08,
+    Damage = 0x09
 }

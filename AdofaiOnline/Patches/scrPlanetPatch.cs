@@ -114,4 +114,16 @@ internal static class scrPlanetPatch
             forcedTilePos = null;
         }
     }
+
+    public static Vector3? forcedMiss;
+    public static Vector3 lastMiss;
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(scrPlanet.MarkMiss))]
+    internal static void MarkMissPostfix(scrPlanet __instance, ref scrMissIndicator __result)
+    {
+        if (forcedMiss.HasValue)
+            __result.transform.position = forcedMiss.Value;
+        else
+            lastMiss = __result.transform.position;
+    }
 }

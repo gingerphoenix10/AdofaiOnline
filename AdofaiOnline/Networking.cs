@@ -273,13 +273,13 @@ public static class Networking
                 break;
             case (byte)PacketType.Die:
                 bool overload = Convert.ToBoolean(data[2]);
-                bool multipress = Convert.ToBoolean(data[3]);
+                bool dieMultipress = Convert.ToBoolean(data[3]);
                 bool hitbox = Convert.ToBoolean(data[4]);
                 byte[] failMessageBytes = new byte[data.Length-5];
                 Buffer.BlockCopy(data, 5, failMessageBytes, 0, failMessageBytes.Length);
                 scrPlayerPatch.remoteDeath = true;
-                Plugin.Logger.LogInfo($"Received death: {overload}, {multipress}, {hitbox}, {Encoding.UTF8.GetString(failMessageBytes)}, {plr.auto}");
-                plr.Die(overload, multipress, Encoding.UTF8.GetString(failMessageBytes), hitbox);
+                Plugin.Logger.LogInfo($"Received death: {overload}, {dieMultipress}, {hitbox}, {Encoding.UTF8.GetString(failMessageBytes)}, {plr.auto}");
+                plr.Die(overload, dieMultipress, Encoding.UTF8.GetString(failMessageBytes), hitbox);
                 break;
             case (byte)PacketType.ChangeScene:
                 SceneManagerPatch.remote = true;
@@ -316,6 +316,18 @@ public static class Networking
                 PauseMenuPatch.remotePause = true;
                 if (ADOBase.controller.paused != (data[2]==0x00?false:true))
                     ADOBase.controller.TogglePauseGame();
+                break;
+            case (byte)PacketType.Damage:
+                bool damageMultipress = Convert.ToBoolean(data[2]);
+                bool applyMultipressDamage = Convert.ToBoolean(data[3]);
+                bool skipDamage = Convert.ToBoolean(data[4]);
+                HitMargin hitMargin = (HitMargin)data[5];
+                float missX = BitConverter.ToSingle(data, 6 + 0 * sizeof(float));
+                float missY = BitConverter.ToSingle(data, 6 + 1 * sizeof(float));
+                float missZ = BitConverter.ToSingle(data, 6 + 2 * sizeof(float));
+                scrPlanetPatch.forcedMiss = new Vector3(missX, missY, missZ);
+                plr.OnDamage(damageMultipress, applyMultipressDamage, skipDamage, hitMargin);
+                scrPlanetPatch.forcedMiss = Vector3.zero;
                 break;
         }
     }

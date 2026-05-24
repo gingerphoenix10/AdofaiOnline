@@ -264,4 +264,25 @@ internal static class scrPlayerPatch
         return false;
     }
 
+    public static bool remoteDamage = false;
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(scrPlayer.OnDamage))]
+    internal static void OnDamage(scrPlayer __instance, bool multipress = false, bool applyMultipressDamage = false, bool skipDamage = false, HitMargin hitMargin = HitMargin.TooEarly)
+    {
+        if (!Networking.IsConnected || __instance.playerID != Networking.localPlayer.PlayerID)
+            return;
+
+        byte[] data = new byte[5 + 3 * sizeof(float)];
+        data[0] = (byte)PacketType.Damage;
+        data[1] = Convert.ToByte(multipress);
+        data[2] = Convert.ToByte(applyMultipressDamage);
+        data[3] = Convert.ToByte(skipDamage);
+        data[4] = (byte)hitMargin;
+        Buffer.BlockCopy(BitConverter.GetBytes(scrPlanetPatch.lastMiss.x), 0, data, 0 * sizeof(float) + 5, sizeof(float));
+        Buffer.BlockCopy(BitConverter.GetBytes(scrPlanetPatch.lastMiss.y), 0, data, 1 * sizeof(float) + 5, sizeof(float));
+        Buffer.BlockCopy(BitConverter.GetBytes(scrPlanetPatch.lastMiss.z), 0, data, 2 * sizeof(float) + 5, sizeof(float));
+
+        Networking.SendToHost(data);
+    }
+
 }
