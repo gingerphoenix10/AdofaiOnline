@@ -295,6 +295,11 @@ public static class Networking
 
                 scrPlayerPatch.remoteRevive = true;
                 revivingPlayer.Revive(revivingTile, plr);
+                foreach (PlayerBubble bubble in GameObject.FindObjectsByType<PlayerBubble>(FindObjectsSortMode.None))
+                {
+                    if (!bubble.popped && bubble.player != null && bubble.player.playerID == revivingPlayer.playerID)
+                        bubble.Pop(plr);
+                }
                 break;
             case (byte)PacketType.GetReady:
                 //ControllerPatch.StartGame();
