@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -73,13 +74,33 @@ internal static class scrPlanetPatch
 
         if (__instance.player.playerID == Networking.localPlayer.PlayerID)
         {
-            byte[] data = new byte[3 + sizeof(int) + sizeof(float)];
+            byte[] data = new byte[3 + sizeof(int) + sizeof(float) + sizeof(double)];
             data[0] = (byte)PacketType.Update;
             data[1] = 0x01;
             data[2] = (byte)hitMargin;
             Buffer.BlockCopy(BitConverter.GetBytes(floor.seqID), 0, data, 3, sizeof(int));
             Buffer.BlockCopy(BitConverter.GetBytes(exitAngle), 0, data, 3 + sizeof(int), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(__instance.next.angle), 0, data, 3 + sizeof(int) + sizeof(float), sizeof(double));
             Networking.SendToHost(data);
+        }
+    }
+
+    [HarmonyTranspiler]
+    [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
+    internal static IEnumerable<CodeInstruction> SwitchChosenTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        int replaced = 0;
+        foreach (var code in instructions)
+        {
+            if (code.opcode == OpCodes.Ldfld && code.operand.ToString() == "System.Boolean noFailInfiniteMargin" && replaced < 2)
+            {
+                replaced++;
+                yield return new CodeInstruction(OpCodes.Pop);
+                yield return new CodeInstruction(OpCodes.Ldc_I4_0);
+                continue;
+            }
+
+            yield return code;
         }
     }
 

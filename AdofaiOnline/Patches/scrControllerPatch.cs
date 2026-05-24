@@ -15,7 +15,7 @@ internal static class scrControllerPatch
     [HarmonyPatch(nameof(scrController.Start_Rewind))]
     internal static bool Start_RewindPrefix()
     {
-        if ((Networking.connection == null && Networking.listenSocket == null) || !ADOBase.controller.gameworld)
+        if (!Networking.IsConnected || !ADOBase.controller.gameworld)
             return true;
 
         if (remoteGetReady)

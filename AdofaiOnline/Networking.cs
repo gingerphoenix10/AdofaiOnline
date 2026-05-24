@@ -252,6 +252,7 @@ public static class Networking
                     HitMargin margin = (HitMargin)data[3];
                     int seqId = BitConverter.ToInt32(data, 4);
                     float exitAngle = BitConverter.ToSingle(data, 4 + sizeof(int));
+                    double angle = BitConverter.ToDouble(data, 4 + sizeof(int) + sizeof(float));
                     //Plugin.Logger.LogInfo($"Floor {seqId}, exitAngle {exitAngle}");
 
                     scrFloor floor = ADOBase.lm.listFloors[seqId];
@@ -259,6 +260,8 @@ public static class Networking
                     plr.planetarySystem.chosenPlanet.currfloor = floor.prevfloor;
                     bool prevInfMargin = ADOBase.controller.noFailInfiniteMargin;
                     ADOBase.controller.noFailInfiniteMargin = true;
+                    scrMiscPatch.forcedMargin = margin;
+                    plr.chosenPlanet.next.snappedLastAngle += angle - plr.chosenPlanet.next.angle;
                     plr.Hit();
                     ADOBase.controller.noFailInfiniteMargin = prevInfMargin;
                 }
