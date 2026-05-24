@@ -236,8 +236,6 @@ public static class Networking
                         if (planet.currfloor != flr && flr != null)
                         {
                             scrPlanetPatch.forcedTilePos = pos;
-                            Plugin.Logger.LogInfo(flr.transform.GetComponent<Collider2D>().ToString());
-                            Physics2DPatch.forcedOutput = new Collider2D[] { flr.transform.GetComponent<Collider2D>() };
                             plr.Hit();
                             planet = planets.chosenPlanet; // Hit() sets chosenPlanet (the one on the ground) to be the previously rotating planet that's now grounded. Update our shorthand
                             planet.currfloor = flr;
