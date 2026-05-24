@@ -42,8 +42,9 @@ public static class Callbacks
         {
             case ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting:
                 {
-                    if (callback.m_info.m_hListenSocket == HSteamListenSocket.Invalid)
-                        break;
+                    //if (callback.m_info.m_hListenSocket == HSteamListenSocket.Invalid)
+                    //    break;
+                    // idk why but that's breaking stuff
 
                     Plugin.Logger.LogInfo("Incoming connection");
 

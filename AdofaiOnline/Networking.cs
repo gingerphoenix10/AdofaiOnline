@@ -306,10 +306,9 @@ public static class Networking
                 break;
             case (byte)PacketType.ChangeScene:
                 SceneManagerPatch.remote = true;
-                LoadSceneMode mode = (LoadSceneMode)data[2];
-                byte[] sceneNameArray = new byte[data.Length - 3];
-                Buffer.BlockCopy(data, 3, sceneNameArray, 0, sceneNameArray.Length);
-                SceneManager.LoadScene(Encoding.UTF8.GetString(sceneNameArray), mode);
+                byte[] sceneNameArray = new byte[data.Length - 2];
+                Buffer.BlockCopy(data, 2, sceneNameArray, 0, sceneNameArray.Length);
+                SceneManager.LoadScene(Encoding.UTF8.GetString(sceneNameArray), LoadSceneMode.Single);
                 break;
             case (byte)PacketType.Revive:
                 scrPlayer revivingPlayer = ADOBase.playerManager.allPlayers[(int)data[2]];
@@ -369,7 +368,7 @@ public static class Networking
     {
         playerCount = count;
         scrPlayerManager.SetPlayerCount(count);
-        //ADOBase.controller.Restart();
-        SceneManager.LoadScene("scnLevelSelect");
+        ADOBase.controller.Restart();
+        //SceneManager.LoadScene("scnLevelSelect");
     }
 }

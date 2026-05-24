@@ -215,11 +215,14 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.Update))]
     internal static void UpdatePostfix(scrPlayer __instance)
     {
-        if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance || !Networking.IsConnected)
+        if (!Networking.IsConnected)
             return;
 
         if (ADOBase.playerManager.players.Length != Networking.playerCount && !ADOBase.loader.isWipingToBlack)
             Networking.ChangePlayerCount(Networking.playerCount);
+
+        if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance)
+            return;
 
         if (!ADOBase.controller.gameworld)
         {

@@ -19,15 +19,16 @@ internal static class SceneManagerPatch
     {
         if (!remote)
         {
+            if (mode != LoadSceneMode.Single)
+                return;
             byte[] levelData = new byte[1 + (GCS.internalLevelName == null ? 0 : GCS.internalLevelName.Length)];
             levelData[0] = (byte)PacketType.SetLevel;
             Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
             Networking.SendToHost(levelData);
 
-            byte[] data = new byte[2 + sceneName.Length];
+            byte[] data = new byte[1 + sceneName.Length];
             data[0] = (byte)PacketType.ChangeScene;
-            data[1] = (byte)mode;
-            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 2, sceneName.Length);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
             Networking.SendToHost(data);
         }
         remote = false;
@@ -45,10 +46,9 @@ internal static class SceneManagerPatch
                 Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
             Networking.SendToHost(levelData);
 
-            byte[] data = new byte[2 + sceneName.Length];
+            byte[] data = new byte[1 + sceneName.Length];
             data[0] = (byte)PacketType.ChangeScene;
-            data[1] = (byte)LoadSceneMode.Single;
-            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 2, sceneName.Length);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
             Networking.SendToHost(data);
         }
         remote = false;
