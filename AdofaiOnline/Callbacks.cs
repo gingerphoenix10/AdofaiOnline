@@ -42,6 +42,9 @@ public static class Callbacks
         {
             case ESteamNetworkingConnectionState.k_ESteamNetworkingConnectionState_Connecting:
                 {
+                    if (callback.m_info.m_hListenSocket == HSteamListenSocket.Invalid)
+                        break;
+
                     Plugin.Logger.LogInfo("Incoming connection");
 
                     SteamNetworkingSockets.AcceptConnection(callback.m_hConn);
@@ -90,14 +93,46 @@ public static class Callbacks
                     }
                     else
                     {
-                        Networking.connection = null;
-                        Networking.pollGroup = null;
-                        Networking.localPlayer = new(0x00);
-                        Networking.ChangePlayerCount(1);
+                        Disconnected();
                     }
                     break;
                 }
         }
+    }
+
+    public static void Disconnected()
+    {
+        if (Networking.connection.HasValue)
+            SteamNetworkingSockets.CloseConnection(
+                Networking.connection.Value,
+                0,
+                "Disconnected",
+                false
+            );
+        Networking.connection = null;
+
+        if (Networking.listenSocket.HasValue)
+        {
+            foreach (HSteamNetConnection client in Networking.clients.Keys)
+            {
+                SteamNetworkingSockets.CloseConnection(
+                    client,
+                    0,
+                    "Server shutting down",
+                    false
+                );
+            }
+            SteamNetworkingSockets.CloseListenSocket(Networking.listenSocket.Value);
+        }
+        Networking.listenSocket = null;
+
+        if (Networking.pollGroup.HasValue)
+            SteamNetworkingSockets.DestroyPollGroup(Networking.pollGroup.Value);
+        Networking.pollGroup = null;
+
+        Networking.localPlayer = new(0x00);
+        Networking.LobbyID = null;
+        Networking.ChangePlayerCount(1);
     }
 
     private static void OnLobbyCreated(LobbyCreated_t callback)
@@ -111,8 +146,6 @@ public static class Callbacks
         Networking.LobbyID = new CSteamID(callback.m_ulSteamIDLobby);
 
         Plugin.Logger.LogInfo($"Lobby created: {Networking.LobbyID}");
-
-        SteamFriends.ActivateGameOverlayInviteDialog(Networking.LobbyID);
     }
 
     private static void OnGameLobbyJoinRequested(GameLobbyJoinRequested_t callback)
@@ -122,10 +155,10 @@ public static class Callbacks
 
     private static void OnLobbyEntered(LobbyEnter_t callback)
     {
-        CSteamID lobbyId = new CSteamID(callback.m_ulSteamIDLobby);
+        Networking.LobbyID = new CSteamID(callback.m_ulSteamIDLobby);
 
         CSteamID hostId =
-            SteamMatchmaking.GetLobbyOwner(lobbyId);
+            SteamMatchmaking.GetLobbyOwner(Networking.LobbyID.Value);
 
         if (!Networking.isHost)
             Networking.ConnectSteam(hostId);

@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +36,16 @@ internal static class PlayerSelectPatch
 
         Button hostClick = hostButton.GetComponent<Button>();
         hostClick.onClick = new();
-        hostClick.onClick.AddListener(() => Networking.Host(7777));
+
+        if (Networking.IsConnected)
+        {
+            hostText.text = "Invite";
+            hostClick.onClick.AddListener(() => SteamFriends.ActivateGameOverlayInviteDialog(Networking.LobbyID.Value)); // This will work great on LAN without a LobbyID!
+        } else
+        {
+            hostClick.onClick.AddListener(() => Networking.Host(7777));
+            //hostClick.onClick.AddListener(() => Networking.HostSteam(0));
+        }
 
         GameObject joinButton = GameObject.Instantiate(__instance.buttons[0].gameObject, onlineButtons.transform);
         joinButton.transform.localPosition = __instance.buttons[2].transform.localPosition + (__instance.buttons[3].transform.localPosition - __instance.buttons[2].transform.localPosition) / 2;
@@ -50,6 +60,14 @@ internal static class PlayerSelectPatch
 
         Button joinClick = joinButton.GetComponent<Button>();
         joinClick.onClick = new();
-        joinClick.onClick.AddListener(() => Networking.Connect("127.0.0.1", 7777));
+
+        if (Networking.IsConnected)
+        {
+            joinText.text = "Leave";
+            joinClick.onClick.AddListener(() => Callbacks.Disconnected());
+            //joinClick.onClick.AddListener(() => Networking.DisconnectSteam());
+        } else
+            joinClick.onClick.AddListener(() => Networking.Connect("192.168.1.222", 7777));
+
     }
 }

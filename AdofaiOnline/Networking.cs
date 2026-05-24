@@ -14,7 +14,7 @@ namespace AdofaiOnline;
 public static class Networking
 {
 
-    public static CSteamID LobbyID;
+    public static CSteamID? LobbyID = null;
     public static Dictionary<HSteamNetConnection, PlayerInfo> clients = new();
     public static byte playerCount = 1;
     public static PlayerInfo localPlayer = new(0x00);
@@ -26,6 +26,7 @@ public static class Networking
 
     // Client
     public static HSteamNetConnection? connection = null;
+    public static CSteamID? hostSteamId = null;
 
     public static bool IsConnected => listenSocket != null || connection != null;
 
@@ -55,7 +56,7 @@ public static class Networking
         Plugin.Logger.LogInfo($"Hosting on virtual port {virtualPort}");
 
         SteamAPICall_t createLobbyCall = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
-        //ADOBase.controller.Restart();
+        ADOBase.controller.Restart();
     }
 
     public static void Connect(string ip, ushort port)
@@ -75,7 +76,7 @@ public static class Networking
     public static void ConnectSteam(CSteamID hostSteamId)
     {
         isHost = false;
-
+        Networking.hostSteamId = hostSteamId;
         SteamNetworkingIdentity identity = new SteamNetworkingIdentity();
         identity.SetSteamID(hostSteamId);
 
@@ -89,6 +90,29 @@ public static class Networking
         }
 
         Plugin.Logger.LogInfo($"Connecting to host: {hostSteamId}");
+    }
+
+    public static void DisconnectSteam()
+    {
+        // idk how this will affect host leaving
+        if (LobbyID.HasValue && LobbyID.Value.IsValid())
+        {
+            SteamMatchmaking.LeaveLobby(LobbyID.Value);
+
+            Plugin.Logger.LogInfo($"Left lobby: {LobbyID.Value}");
+
+            LobbyID = CSteamID.Nil;
+        }
+
+        if (hostSteamId.HasValue && hostSteamId.Value.IsValid())
+        {
+            SteamNetworking.CloseP2PSessionWithUser(hostSteamId.Value);
+
+            Plugin.Logger.LogInfo($"Closed session with: {hostSteamId.Value}");
+
+            hostSteamId = null;
+        }
+        Callbacks.Disconnected();
     }
 
     public static void SendToHost(byte[] data, int flags = Constants.k_nSteamNetworkingSend_Reliable)
@@ -206,6 +230,7 @@ public static class Networking
         }
     }
 
+    private static bool alt = false;
     public static async void PacketEvent(byte[] data)
     {
         scrPlayer plr = ADOBase.playerManager.allPlayers[(int)data[1]];
@@ -300,8 +325,6 @@ public static class Networking
                 }
                 break;
             case (byte)PacketType.GetReady:
-                //ControllerPatch.StartGame();
-                //!levelWasSkipped && (!playerManager.AnyValidInputWasTriggered() || isCutscene)
                 scrControllerPatch.remoteGetReady = true;
                 ADOBase.controller.levelWasSkipped = true;
                 break;
