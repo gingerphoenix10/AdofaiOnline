@@ -307,8 +307,12 @@ public static class Networking
                 break;
             case (byte)PacketType.SetLevel:
                 byte[] levelNameChars = new byte[data.Length - 2];
-                Buffer.BlockCopy(data, 2, levelNameChars, 0, data.Length - 2);
-                GCS.internalLevelName = Encoding.UTF8.GetString(levelNameChars);
+                if (levelNameChars.Length > 0)
+                {
+                    Buffer.BlockCopy(data, 2, levelNameChars, 0, data.Length - 2);
+                    GCS.internalLevelName = Encoding.UTF8.GetString(levelNameChars);
+                } else
+                    GCS.internalLevelName = null;
                 break;
             case (byte)PacketType.Pause:
                 PauseMenuPatch.remotePause = true;
