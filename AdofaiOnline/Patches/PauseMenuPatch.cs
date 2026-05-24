@@ -27,4 +27,30 @@ internal static class PauseMenuPatch
         Networking.Connect("127.0.0.1", 7777);
         return false;
     }
+
+    public static bool remotePause = false;
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(PauseMenu.Show))]
+    internal static void ShowPostfix()
+    {
+        if (!remotePause)
+        {
+            byte[] data = new byte[2] { (byte)PacketType.Pause, 0x01 };
+            Networking.SendToHost(data);
+        }
+        remotePause = false;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(PauseMenu.Hide))]
+    internal static void HidePostfix()
+    {
+        if (!remotePause)
+        {
+            byte[] data = new byte[2] { (byte)PacketType.Pause, 0x00 };
+            Networking.SendToHost(data);
+        }
+        remotePause = false;
+    }
 }

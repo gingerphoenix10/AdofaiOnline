@@ -15,5 +15,6 @@ public enum PacketType : byte
     ChangeScene = 0x04,
     Revive = 0x05,
     GetReady = 0x06,
-    SetLevel = 0x07
+    SetLevel = 0x07,
+    Pause = 0x08
 }

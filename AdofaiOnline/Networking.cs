@@ -312,6 +312,11 @@ public static class Networking
                 Buffer.BlockCopy(data, 2, levelNameChars, 0, data.Length - 2);
                 GCS.internalLevelName = Encoding.UTF8.GetString(levelNameChars);
                 break;
+            case (byte)PacketType.Pause:
+                PauseMenuPatch.remotePause = true;
+                if (ADOBase.controller.paused != (data[2]==0x00?false:true))
+                    ADOBase.controller.TogglePauseGame();
+                break;
         }
     }
 
