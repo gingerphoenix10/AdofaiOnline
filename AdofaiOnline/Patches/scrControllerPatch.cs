@@ -33,7 +33,7 @@ internal static class scrControllerPatch
     [HarmonyPatch(nameof(scrController.Fail2_Update))]
     internal static void Fail2_UpdatePrefix(scrController __instance)
     {
-        if (!__instance.playerManager.AnyValidInputWasTriggered() || scrUIController.instance.isWipingToBlack)
+        if (!__instance.playerManager.AnyValidInputWasTriggered() || scrUIController.instance.isWipingToBlack || !Networking.IsConnected)
             return;
         Networking.SendToHost(new byte[] { (byte)PacketType.ReloadLevel });
     }

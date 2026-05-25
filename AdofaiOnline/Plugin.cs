@@ -3,9 +3,11 @@ using BepInEx;
 using BepInEx.Logging;
 #else
 using UnityModManagerNet;
+using static UnityModManagerNet.UnityModManager;
 #endif
 using HarmonyLib;
 using UnityEngine;
+using System.Reflection;
 
 namespace AdofaiOnline;
 
@@ -23,11 +25,6 @@ public class Plugin : BaseUnityPlugin
         Patcher.PatchAll();
         GameObject.DontDestroyOnLoad(callbackHandler = new GameObject().AddComponent<SteamManager>());
         Callbacks.InitializeCallbacks();
-    }
-
-    public void HitTest()
-    {
-        ADOBase.playerManager.allPlayers[0].planetarySystem.chosenPlanet = ADOBase.playerManager.allPlayers[0].planetarySystem.chosenPlanet.SwitchChosen();
     }
 }
 #else

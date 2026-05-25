@@ -29,7 +29,9 @@ internal static class SceneManagerPatch
             byte[] data = new byte[1 + sceneName.Length];
             data[0] = (byte)PacketType.ChangeScene;
             Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
+#if !EXPERIMENT_CUSTOMS
             Networking.SendToHost(data);
+#endif
         }
         remote = false;
     }
@@ -49,7 +51,9 @@ internal static class SceneManagerPatch
             byte[] data = new byte[1 + sceneName.Length];
             data[0] = (byte)PacketType.ChangeScene;
             Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
+#if !EXPERIMENT_CUSTOMS
             Networking.SendToHost(data);
+#endif
         }
         remote = false;
     }

@@ -67,7 +67,7 @@ internal static class PlayerSelectPatch
             joinClick.onClick.AddListener(() => Callbacks.Disconnected());
             //joinClick.onClick.AddListener(() => Networking.DisconnectSteam());
         } else
-            joinClick.onClick.AddListener(() => Networking.Connect("192.168.1.222", 7777));
+            joinClick.onClick.AddListener(() => Networking.Connect("127.0.0.1", 7777));
             //joinClick.onClick.AddListener(() => Networking.ConnectSteam(new CSteamID(76561198330113884)));
 
     }

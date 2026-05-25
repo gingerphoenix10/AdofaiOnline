@@ -389,7 +389,10 @@ public static class Networking
     {
         playerCount = count;
         scrPlayerManager.SetPlayerCount(count);
-        //ADOBase.controller.Restart();
+#if EXPERIMENT_CUSTOMS
+        ADOBase.controller.Restart();
+#else
         SceneManager.LoadScene("scnLevelSelect");
+#endif
     }
 }

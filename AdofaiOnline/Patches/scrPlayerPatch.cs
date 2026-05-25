@@ -24,7 +24,7 @@ internal static class scrPlayerPatch
             __result = true;
             return false;
         }
-        if (__instance.playerID != Networking.localPlayer.PlayerID)
+        if (__instance.playerID != Networking.localPlayer.PlayerID && ADOBase.controller.playerManager.players.Length == Networking.playerCount)
         {
             __result = false;
             return false;
@@ -218,7 +218,11 @@ internal static class scrPlayerPatch
         if (!Networking.IsConnected)
             return;
 
-        if (ADOBase.playerManager.players.Length != Networking.playerCount && !ADOBase.loader.isWipingToBlack)
+        if (ADOBase.playerManager.players.Length != Networking.playerCount && !ADOBase.loader.isWipingToBlack
+#if EXPERIMENT_CUSTOMS
+            && ADOBase.controller.gameworld
+#endif
+            )
             Networking.ChangePlayerCount(Networking.playerCount);
 
         if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance)
