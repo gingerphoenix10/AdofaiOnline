@@ -19,9 +19,12 @@ public static class Networking
     public static byte playerCount = 1;
     public static PlayerInfo localPlayer = new(
         0x00,
-        ADOBase.controller.neoCosmosManager.installed,
-        ADOBase.controller.vegaDLCManager.installed,
-        ADOBase.controller.featuredDLCManager.installed
+        //ADOBase.controller.neoCosmosManager.installed,
+        //ADOBase.controller.vegaDLCManager.installed,
+        //ADOBase.controller.featuredDLCManager.installed
+        false,
+        false,
+        false
         );
     public static bool isHost = false;
     public static HSteamNetPollGroup? pollGroup = null;
@@ -182,7 +185,8 @@ public static class Networking
                     SteamNetworkingSockets.CloseConnection(msg.m_conn, 1, "Lobby full", false);
                     return;
                 }
-                clients.Add(msg.m_conn, new PlayerInfo((byte)playerId, Convert.ToBoolean(data[1]), Convert.ToBoolean(data[2]), Convert.ToBoolean(data[3])));
+                //clients.Add(msg.m_conn, new PlayerInfo((byte)playerId, Convert.ToBoolean(data[1]), Convert.ToBoolean(data[2]), Convert.ToBoolean(data[3])));
+                clients.Add(msg.m_conn, new PlayerInfo((byte)playerId, false, false, false));
 
                 byte[] sendDataNew = new byte[3]
                 {

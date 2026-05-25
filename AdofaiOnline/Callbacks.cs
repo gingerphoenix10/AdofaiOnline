@@ -181,6 +181,8 @@ public static class Callbacks
             ADOBase.controller.featuredDLCManager.installed
         );
         Networking.LobbyID = null;
+        Networking.clients.Clear();
+        Networking.playerCount = 1;
         Networking.ChangePlayerCount(1);
     }
 

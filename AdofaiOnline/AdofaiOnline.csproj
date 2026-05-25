@@ -16,13 +16,13 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <DefineConstants>DEBUG;TRACE;EXPERIMENT_CUSTOMS</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'BepInEx'"> <!-- BepInEx PropertyGroup -->
-      <DefineConstants>BEPIN;DEBUG;EXPERIMENT_CUSTOMS</DefineConstants>
+      <DefineConstants>BEPIN;DEBUG</DefineConstants>
 	  <TargetFramework>netstandard2.1</TargetFramework>
 	  <AssemblyName>AdofaiOnline</AssemblyName>
 	  <Product>AdofaiOnline</Product>
