@@ -17,23 +17,46 @@ internal static class SteamManagerPatch
     [HarmonyPatch(nameof(SteamManager.Update))]
     internal static void UpdatePostfix(SteamManager __instance)
     {
-        if (!__instance.m_bInitialized || Networking.pollGroup == null)
-            return;
-
-        IntPtr[] messages = new IntPtr[32];
-        int count = SteamNetworkingSockets.ReceiveMessagesOnPollGroup(
-            Networking.pollGroup.Value,
-            messages,
-            messages.Length
-        );
-
-        for (int i = 0; i < count; i++)
+        if (Networking.pollGroup.HasValue)
         {
-            SteamNetworkingMessage_t msg = Marshal.PtrToStructure<SteamNetworkingMessage_t>(messages[i]);
-            byte[] data = new byte[msg.m_cbSize];
-            Marshal.Copy(msg.m_pData, data, 0, data.Length);
-            Networking.HandlePacket(data, msg);
-            SteamNetworkingMessage_t.Release(messages[i]);
+            IntPtr[] messages = new IntPtr[32];
+            int count = SteamNetworkingSockets.ReceiveMessagesOnPollGroup(
+                Networking.pollGroup.Value,
+                messages,
+                messages.Length
+            );
+
+            for (int i = 0; i < count; i++)
+            {
+                SteamNetworkingMessage_t msg = Marshal.PtrToStructure<SteamNetworkingMessage_t>(messages[i]);
+                byte[] data = new byte[msg.m_cbSize];
+                Marshal.Copy(msg.m_pData, data, 0, data.Length);
+                Networking.HandlePacket(data, msg);
+                SteamNetworkingMessage_t.Release(messages[i]);
+            }
         }
+
+        SteamNetworkingSockets.RunCallbacks();
+    }
+
+    private static bool shouldInit = false;
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(SteamManager.Awake))]
+    internal static void AwakePrefix(SteamManager __instance)
+    {
+        if (!__instance.m_bInitialized)
+            shouldInit = true;
+    }
+
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(SteamManager.Awake))]
+    internal static void AwakePostfix(SteamManager __instance)
+    {
+        if (shouldInit && __instance.m_bInitialized)
+        {
+            Plugin.Logger.LogInfo("Init whatevers");
+            SteamNetworkingUtils.InitRelayNetworkAccess();
+        }
+        shouldInit = false;
     }
 }

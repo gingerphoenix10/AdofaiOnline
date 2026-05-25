@@ -18,8 +18,9 @@ public static class Networking
     public static Dictionary<HSteamNetConnection, PlayerInfo> clients = new();
     public static byte playerCount = 1;
     public static PlayerInfo localPlayer = new(0x00);
-    public static bool isHost = true;
+    public static bool isHost = false;
     public static HSteamNetPollGroup? pollGroup = null;
+    public const int VIRTUAL_PORT = 7777;
 
     // Host
     public static HSteamListenSocket? listenSocket = null;
@@ -45,15 +46,15 @@ public static class Networking
         ADOBase.controller.Restart();
     }
 
-    public static void HostSteam(int virtualPort)
+    public static void HostSteam()
     {
         isHost = true;
 
-        listenSocket = SteamNetworkingSockets.CreateListenSocketP2P(virtualPort, 0, null);
+        listenSocket = SteamNetworkingSockets.CreateListenSocketP2P(VIRTUAL_PORT, 0, null);
 
         pollGroup = SteamNetworkingSockets.CreatePollGroup();
 
-        Plugin.Logger.LogInfo($"Hosting on virtual port {virtualPort}");
+        Plugin.Logger.LogInfo($"Hosting on virtual port {VIRTUAL_PORT}");
 
         SteamAPICall_t createLobbyCall = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, 4);
         ADOBase.controller.Restart();
@@ -80,9 +81,16 @@ public static class Networking
         SteamNetworkingIdentity identity = new SteamNetworkingIdentity();
         identity.SetSteamID(hostSteamId);
 
-        connection = SteamNetworkingSockets.ConnectP2P(ref identity, 0, 0, null);
-        pollGroup = SteamNetworkingSockets.CreatePollGroup();
-
+        SteamNetworkingConfigValue_t[] opts = new SteamNetworkingConfigValue_t[] {
+            new SteamNetworkingConfigValue_t
+            {
+                m_eDataType = ESteamNetworkingConfigDataType.k_ESteamNetworkingConfig_Int32,
+                m_eValue = ESteamNetworkingConfigValue.k_ESteamNetworkingConfig_TimeoutInitial,
+                m_val = new SteamNetworkingConfigValue_t.OptionValue { m_int32 = 3000 }
+            }
+        };
+        connection = SteamNetworkingSockets.ConnectP2P(ref identity, VIRTUAL_PORT, 0, opts);
+        SteamFriends.RequestUserInformation(hostSteamId, false);
         if (connection == HSteamNetConnection.Invalid)
         {
             Plugin.Logger.LogError("Failed to create P2P connection");
@@ -368,7 +376,7 @@ public static class Networking
     {
         playerCount = count;
         scrPlayerManager.SetPlayerCount(count);
-        ADOBase.controller.Restart();
-        //SceneManager.LoadScene("scnLevelSelect");
+        //ADOBase.controller.Restart();
+        SceneManager.LoadScene("scnLevelSelect");
     }
 }
