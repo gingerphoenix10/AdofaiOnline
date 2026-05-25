@@ -43,8 +43,8 @@ internal static class PlayerSelectPatch
             hostClick.onClick.AddListener(() => SteamFriends.ActivateGameOverlayInviteDialog(Networking.LobbyID.Value)); // This will work great on LAN without a LobbyID!
         } else
         {
-            //hostClick.onClick.AddListener(() => Networking.Host(7777));
-            hostClick.onClick.AddListener(() => Networking.HostSteam());
+            hostClick.onClick.AddListener(() => Networking.Host(7777));
+            //hostClick.onClick.AddListener(() => Networking.HostSteam());
         }
 
         GameObject joinButton = GameObject.Instantiate(__instance.buttons[0].gameObject, onlineButtons.transform);
@@ -64,11 +64,11 @@ internal static class PlayerSelectPatch
         if (Networking.IsConnected)
         {
             joinText.text = "Leave";
-            //joinClick.onClick.AddListener(() => Callbacks.Disconnected());
-            joinClick.onClick.AddListener(() => Networking.DisconnectSteam());
+            joinClick.onClick.AddListener(() => Callbacks.Disconnected());
+            //joinClick.onClick.AddListener(() => Networking.DisconnectSteam());
         } else
-            //joinClick.onClick.AddListener(() => Networking.Connect("192.168.1.222", 7777));
-            joinClick.onClick.AddListener(() => Networking.ConnectSteam(new CSteamID(76561198330113884)));
+            joinClick.onClick.AddListener(() => Networking.Connect("192.168.1.222", 7777));
+            //joinClick.onClick.AddListener(() => Networking.ConnectSteam(new CSteamID(76561198330113884)));
 
     }
 }

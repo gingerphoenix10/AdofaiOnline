@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,5 +27,14 @@ internal static class scrControllerPatch
         Networking.SendToHost(new byte[] { (byte)PacketType.GetReady });
         remoteGetReady = false;
         return true;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(scrController.Fail2_Update))]
+    internal static void Fail2_UpdatePrefix(scrController __instance)
+    {
+        if (!__instance.playerManager.AnyValidInputWasTriggered() || scrUIController.instance.isWipingToBlack)
+            return;
+        Networking.SendToHost(new byte[] { (byte)PacketType.ReloadLevel });
     }
 }

@@ -361,6 +361,19 @@ public static class Networking
                 plr.OnDamage(damageMultipress, applyMultipressDamage, skipDamage, hitMargin);
                 scrPlanetPatch.forcedMiss = Vector3.zero;
                 break;
+            case (byte)PacketType.ReloadLevel:
+                if ((bool)ADOBase.customLevel)
+                {
+                    if (!ADOBase.isLevelEditor || !ADOBase.editor.inStrictlyEditingMode)
+                    {
+                        ADOBase.controller.StartCoroutine(ADOBase.controller.ResetCustomLevel());
+                    }
+                }
+                else
+                {
+                    ADOBase.controller.Restart();
+                }
+                break;
         }
     }
 

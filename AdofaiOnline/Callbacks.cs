@@ -67,8 +67,6 @@ public static class Callbacks
                     Plugin.Logger.LogInfo($"{Networking.pollGroup == null}, {Networking.pollGroup}");
                     Plugin.Logger.LogInfo($"{Networking.LobbyID == null}, {Networking.LobbyID}");
 
-                    await Task.Delay(1000);
-
                     Plugin.Logger.LogInfo("Accepting connection");
                     EResult result = SteamNetworkingSockets.AcceptConnection(callback.m_hConn);
                     Plugin.Logger.LogInfo($"AcceptConnection result: {result}");
@@ -100,8 +98,8 @@ public static class Callbacks
                         break;
                     }
 
-                    //Networking.pollGroup = SteamNetworkingSockets.CreatePollGroup();
-                    //SteamNetworkingSockets.SetConnectionPollGroup(Networking.connection.Value, Networking.pollGroup.Value);
+                    Networking.pollGroup = SteamNetworkingSockets.CreatePollGroup();
+                    SteamNetworkingSockets.SetConnectionPollGroup(Networking.connection.Value, Networking.pollGroup.Value);
 
                     ADOBase.controller.Restart();
                     byte[] data = new byte[1] { (byte)PacketType.Welcome };
