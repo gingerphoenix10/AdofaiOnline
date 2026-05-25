@@ -80,5 +80,6 @@ public class BepInLogger
 
     public void LogInfo(string message) => logger.Log(message);
     public void LogError(string message) => logger.Error(message);
+    public void LogWarning(string message) => logger.Warning(message);
 }
 #endif
