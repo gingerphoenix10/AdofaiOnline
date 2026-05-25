@@ -17,7 +17,12 @@ public static class Networking
     public static CSteamID? LobbyID = null;
     public static Dictionary<HSteamNetConnection, PlayerInfo> clients = new();
     public static byte playerCount = 1;
-    public static PlayerInfo localPlayer = new(0x00);
+    public static PlayerInfo localPlayer = new(
+        0x00,
+        ADOBase.controller.neoCosmosManager.installed,
+        ADOBase.controller.vegaDLCManager.installed,
+        ADOBase.controller.featuredDLCManager.installed
+        );
     public static bool isHost = false;
     public static HSteamNetPollGroup? pollGroup = null;
     public const int VIRTUAL_PORT = 7777;
@@ -177,7 +182,7 @@ public static class Networking
                     SteamNetworkingSockets.CloseConnection(msg.m_conn, 1, "Lobby full", false);
                     return;
                 }
-                clients.Add(msg.m_conn, new PlayerInfo((byte)playerId));
+                clients.Add(msg.m_conn, new PlayerInfo((byte)playerId, Convert.ToBoolean(data[1]), Convert.ToBoolean(data[2]), Convert.ToBoolean(data[3])));
 
                 byte[] sendDataNew = new byte[3]
                 {

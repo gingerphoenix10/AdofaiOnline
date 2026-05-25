@@ -102,7 +102,12 @@ public static class Callbacks
                     SteamNetworkingSockets.SetConnectionPollGroup(Networking.connection.Value, Networking.pollGroup.Value);
 
                     ADOBase.controller.Restart();
-                    byte[] data = new byte[1] { (byte)PacketType.Welcome };
+                    byte[] data = new byte[] {
+                        (byte)PacketType.Welcome,
+                        Convert.ToByte(ADOBase.controller.neoCosmosManager.installed),
+                        Convert.ToByte(ADOBase.controller.vegaDLCManager.installed),
+                        Convert.ToByte(ADOBase.controller.featuredDLCManager.installed)
+                    };
                     Networking.SendToHost(data);
                     break;
                 }
@@ -169,7 +174,12 @@ public static class Callbacks
             SteamNetworkingSockets.DestroyPollGroup(Networking.pollGroup.Value);
         Networking.pollGroup = null;
 
-        Networking.localPlayer = new(0x00);
+        Networking.localPlayer = new(
+            0x00,
+            ADOBase.controller.neoCosmosManager.installed,
+            ADOBase.controller.vegaDLCManager.installed,
+            ADOBase.controller.featuredDLCManager.installed
+        );
         Networking.LobbyID = null;
         Networking.ChangePlayerCount(1);
     }
