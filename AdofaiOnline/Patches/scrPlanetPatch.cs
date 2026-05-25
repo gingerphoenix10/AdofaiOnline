@@ -69,7 +69,7 @@ internal static class scrPlanetPatch
     [HarmonyPatch(nameof(scrPlanet.MoveToNextFloor))]
     internal static void MoveToNextFloorPrefix(scrPlanet __instance, scrFloor floor, float exitAngle, HitMargin hitMargin)
     {
-        if (!Networking.IsConnected)
+        if (!Networking.IsConnected || !ADOBase.controller.gameworld)
             return;
 
         if (__instance.player.playerID == Networking.localPlayer.PlayerID)
