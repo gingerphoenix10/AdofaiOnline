@@ -13,6 +13,8 @@ namespace AdofaiOnline.Patches;
 [HarmonyPatch(typeof(SteamManager))]
 internal static class SteamManagerPatch
 {
+    // Nothing in this file should check for IsConnected since everything is required for accepting invites to connect in the first place
+
     [HarmonyPostfix]
     [HarmonyPatch(nameof(SteamManager.Update))]
     internal static void UpdatePostfix(SteamManager __instance)
@@ -53,10 +55,7 @@ internal static class SteamManagerPatch
     internal static void AwakePostfix(SteamManager __instance)
     {
         if (shouldInit && __instance.m_bInitialized)
-        {
-            Plugin.Logger.LogInfo("Init whatevers");
             SteamNetworkingUtils.InitRelayNetworkAccess();
-        }
         shouldInit = false;
     }
 }

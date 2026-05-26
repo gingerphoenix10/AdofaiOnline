@@ -18,6 +18,9 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.ValidInputWasTriggered))]
     internal static bool ValidInputWasTriggeredPrefix(scrPlayer __instance, ref bool __result)
     {
+        if (!Networking.IsConnected)
+            return true;
+
         if (forcedInput)
         {
             forcedInput = false;
@@ -56,12 +59,12 @@ internal static class scrPlayerPatch
         }
         bool flag2 = Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Mouse1);
         bool flag3 = false;
-        /*if ((ADOBase.isSwitch && !Application.isEditor) || scrController.coopMode)
+        if (ADOBase.isSwitch && !Application.isEditor)
         {
             if (RDInput.playerInputs != null && RDInput.playerInputs.Count > __instance.playerID && RDInput.playerInputs[__instance.playerID].Count > 0)
                 flag3 = ((!RDC.force4PlayerCoop) ? RDInput.playerInputs[__instance.playerID].Any((RDInputType input) => input.mainPress) : __instance.KeyWasPressedForDebugCoop());
         }
-        else*/
+        else
         if (ADOBase.isMobile)
         {
             flag3 = (Input.anyKeyDown && !flag2) || flag;
@@ -89,6 +92,9 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.CountValidKeysPressed))]
     internal static bool CountValidKeysPressedPrefix(scrPlayer __instance, ref int __result)
     {
+        if (!Networking.IsConnected)
+            return true;
+
         int num = 0;
         __instance.keyLimiterOverCounter = 0;
         if (__instance.touchEnabled)
@@ -103,7 +109,7 @@ internal static class scrPlayerPatch
                 }
             }
         }
-        if ((ADOBase.isSwitch && !Application.isEditor) || scrController.coopMode && false)
+        if (ADOBase.isSwitch && !Application.isEditor)
         {
             if (RDC.force4PlayerCoop)
             {
@@ -169,7 +175,7 @@ internal static class scrPlayerPatch
     [HarmonyPatch(nameof(scrPlayer.Die))]
     internal static bool DiePrefix(scrPlayer __instance, bool overload, bool multipress, string failMessage, bool hitbox)
     {
-        if (Networking.connection == null && Networking.listenSocket == null)
+        if (!Networking.IsConnected)
             return true;
 
         if (__instance.playerID == Networking.localPlayer.PlayerID && !__instance.auto)
@@ -194,22 +200,6 @@ internal static class scrPlayerPatch
         return false;
     }
 
-    static int i = 0;
-    [HarmonyPostfix]
-    [HarmonyPatch(nameof(scrPlayer.Hit))]
-    internal static async void HitPostfix(scrPlayer __instance)
-    {
-        //if (i < 200)
-        //{
-        //i++;
-        //await Task.Delay(10);
-        //__instance.planetarySystem.chosenPlanet = __instance.chosenPlanet.SwitchChosen();
-        //}
-        //else
-        //i = 0;
-        //__instance.chosenPlanet.SwitchChosen();
-    }
-
     public static scrFloor lastFloor = null;
     [HarmonyPostfix]
     [HarmonyPatch(nameof(scrPlayer.Update))]
@@ -223,7 +213,10 @@ internal static class scrPlayerPatch
             && ADOBase.controller.gameworld
 #endif
             )
+        {
             Networking.ChangePlayerCount(Networking.playerCount);
+            return;
+        }
 
         if (ADOBase.playerManager.allPlayers[Networking.localPlayer.PlayerID] != __instance)
             return;
@@ -233,7 +226,7 @@ internal static class scrPlayerPatch
             if (__instance.currFloor != null && __instance.currFloor != lastFloor)
             {
                 lastFloor = __instance.currFloor;
-                byte[] data = new byte[2 + sizeof(float) * 4 + sizeof(double) * 1]; // 3 floats, plus one byte for packet type, one for level type, and one for current angle
+                byte[] data = new byte[2 + sizeof(float) * 3 + sizeof(double) * 1];
 
                 data[0] = (byte)PacketType.Update;
                 data[1] = 0x00;
@@ -241,7 +234,7 @@ internal static class scrPlayerPatch
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.currFloor.transform.position.y), 0, data, 1 * sizeof(float) + 2, sizeof(float));
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.currFloor.transform.position.z), 0, data, 2 * sizeof(float) + 2, sizeof(float));
                 Buffer.BlockCopy(BitConverter.GetBytes(__instance.planetarySystem.chosenPlanet.angle), 0, data, 3 * sizeof(float) + 2, sizeof(double));
-                Networking.SendToHost(data, Constants.k_nSteamNetworkingSend_Unreliable);
+                Networking.SendToHost(data);
             }
         }
     }

@@ -13,6 +13,12 @@ internal class scrMiscPatch
     [HarmonyPatch(nameof(scrMisc.GetHitMargin))]
     internal static bool GetHitMarginPatch(ref HitMargin __result)
     {
+        if (!Networking.IsConnected)
+        {
+            forcedMargin = null;
+            return true;
+        }
+
         if (forcedMargin.HasValue)
         {
             __result = forcedMargin.Value;

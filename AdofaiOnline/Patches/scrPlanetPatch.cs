@@ -12,50 +12,17 @@ namespace AdofaiOnline.Patches;
 [HarmonyPatch(typeof(scrPlanet))]
 internal static class scrPlanetPatch
 {
-    /*
-    [HarmonyTranspiler]
-    [HarmonyPatch(nameof(scrPlanet.Update_RefreshAngles))]
-    internal static IEnumerable<CodeInstruction> Update_RefreshAnglesTranspiler(IEnumerable<CodeInstruction> instructions)
-    {
-        var angleField = AccessTools.Field(typeof(scrPlanet), "angle");
-
-        foreach (var code in instructions)
-        {
-            if (code.opcode == OpCodes.Stfld &&
-                Equals(code.operand, angleField))
-            {
-                // stfld consumes:
-                //   object ref
-                //   value
-                // replace with pops
-                yield return new CodeInstruction(OpCodes.Pop);
-                yield return new CodeInstruction(OpCodes.Pop);
-                continue;
-            }
-
-            yield return code;
-        }
-    }
-    [HarmonyPrefix]
-    [HarmonyPatch(nameof(scrPlanet.Update_RefreshAngles))]
-    internal static void Update_RefreshAnglesPrefix(scrPlanet __instance)
-    {
-        
-    }
-
-    [HarmonyTranspiler]
-    [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
-    internal static IEnumerable<CodeInstruction> SwitchChosenTranspiler(IEnumerable<CodeInstruction> instructions)
-    {
-        return instructions;
-    }
-
-    */
     public static Vector3? forcedTilePos = null;
     [HarmonyPrefix]
     [HarmonyPatch(nameof(scrPlanet.SnappedCardinalDirection))]
     internal static bool SnappedCardinalDirectionPrefix(scrPlanet __instance, ref Vector3 __result)
     {
+        if (!Networking.IsConnected)
+        {
+            forcedTilePos = null;
+            return true;
+        }
+
         if (forcedTilePos != null)
         {
             __result = (Vector3)forcedTilePos;
@@ -89,6 +56,14 @@ internal static class scrPlanetPatch
     [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
     internal static IEnumerable<CodeInstruction> SwitchChosenTranspiler(IEnumerable<CodeInstruction> instructions)
     {
+        if (!Networking.IsConnected)
+        {
+            foreach (var instruction in instructions)
+                yield return instruction;
+
+            yield break;
+        }
+
         int replaced = 0;
         foreach (var code in instructions)
         {
@@ -104,23 +79,18 @@ internal static class scrPlanetPatch
         }
     }
 
-    [HarmonyPostfix]
-    [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
-    internal static void SwitchChosenPostfix(scrPlanet __instance)
-    {
-        if (forcedTilePos.HasValue)
-        {
-            __instance.transform.position = forcedTilePos.Value;
-            forcedTilePos = null;
-        }
-    }
-
     public static Vector3? forcedMiss;
     public static Vector3 lastMiss;
     [HarmonyPostfix]
     [HarmonyPatch(nameof(scrPlanet.MarkMiss))]
     internal static void MarkMissPostfix(scrPlanet __instance, ref scrMissIndicator __result)
     {
+        if (!Networking.IsConnected)
+        {
+            forcedMiss = null;
+            lastMiss = default;
+        }
+
         if (forcedMiss.HasValue)
             __result.transform.position = forcedMiss.Value;
         else

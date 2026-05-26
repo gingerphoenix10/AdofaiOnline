@@ -17,6 +17,12 @@ internal static class SceneManagerPatch
     [HarmonyPatch(nameof(SceneManager.LoadScene), new Type[] { typeof(string), typeof(LoadSceneMode) })]
     internal static void LoadScene1Postfix(string sceneName, LoadSceneMode mode)
     {
+        if (!Networking.IsConnected)
+        {
+            remote = false;
+            return;
+        }
+
         if (!remote)
         {
             if (mode != LoadSceneMode.Single)
@@ -40,6 +46,12 @@ internal static class SceneManagerPatch
     [HarmonyPatch(nameof(SceneManager.LoadScene), new Type[] { typeof(string) })]
     internal static void LoadScene2Postfix(string sceneName)
     {
+        if (!Networking.IsConnected)
+        {
+            remote = false;
+            return;
+        }
+
         if (!remote)
         {
             byte[] levelData = new byte[1 + (GCS.internalLevelName==null?0:GCS.internalLevelName.Length)];
