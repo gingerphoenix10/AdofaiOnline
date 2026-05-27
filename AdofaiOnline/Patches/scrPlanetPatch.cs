@@ -56,14 +56,8 @@ internal static class scrPlanetPatch
     [HarmonyPatch(nameof(scrPlanet.SwitchChosen))]
     internal static IEnumerable<CodeInstruction> SwitchChosenTranspiler(IEnumerable<CodeInstruction> instructions)
     {
-        if (!Networking.IsConnected)
-        {
-            foreach (var instruction in instructions)
-                yield return instruction;
-
-            yield break;
-        }
-
+        // Can't check IsConnected for this since transpilers only ever run once at startup.
+        // Since you're not online when the game launches, this patch would do nothing
         int replaced = 0;
         foreach (var code in instructions)
         {
