@@ -31,13 +31,6 @@ internal static class SceneManagerPatch
             levelData[0] = (byte)PacketType.SetLevel;
             Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
             Networking.SendToHost(levelData);
-
-            byte[] data = new byte[1 + sceneName.Length];
-            data[0] = (byte)PacketType.ChangeScene;
-            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
-#if !EXPERIMENT_CUSTOMS
-            Networking.SendToHost(data);
-#endif
         }
         remote = false;
     }
@@ -59,13 +52,6 @@ internal static class SceneManagerPatch
             if (GCS.internalLevelName != null)
                 Buffer.BlockCopy(Encoding.UTF8.GetBytes(GCS.internalLevelName), 0, levelData, 1, GCS.internalLevelName.Length);
             Networking.SendToHost(levelData);
-
-            byte[] data = new byte[1 + sceneName.Length];
-            data[0] = (byte)PacketType.ChangeScene;
-            Buffer.BlockCopy(Encoding.UTF8.GetBytes(sceneName), 0, data, 1, sceneName.Length);
-#if !EXPERIMENT_CUSTOMS
-            Networking.SendToHost(data);
-#endif
         }
         remote = false;
     }
