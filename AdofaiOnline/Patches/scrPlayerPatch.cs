@@ -210,7 +210,7 @@ internal static class scrPlayerPatch
 
         if (ADOBase.playerManager.players.Length != Networking.playerCount && !ADOBase.loader.isWipingToBlack
 #if EXPERIMENT_CUSTOMS
-            && ADOBase.controller.gameworld
+            && ADOBase.controller.gameworld && !ADOBase.isEditingLevel
 #endif
             )
         {
