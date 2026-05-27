@@ -304,6 +304,7 @@ public static class Networking
                     plr.chosenPlanet.next.snappedLastAngle += angle - plr.chosenPlanet.next.angle;
                     plr.Hit();
                     ADOBase.controller.noFailInfiniteMargin = prevInfMargin;
+                    plr.planetarySystem.chosenPlanet.transform.position = floor.transform.position; // Attempt to fix desync in some cases
                 }
                 break;
             case (byte)PacketType.CountChanged:
