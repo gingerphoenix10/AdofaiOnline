@@ -84,7 +84,11 @@ internal static class PlayerSelectPatch
 
             Button inviteClick = inviteButton.GetComponent<Button>();
             inviteClick.onClick = new();
-            inviteClick.onClick.AddListener(() => SteamFriends.ActivateGameOverlayInviteDialog(Networking.LobbyID.Value)); // This will work great on LAN without a LobbyID!
+            inviteClick.onClick.AddListener(() => {
+                // My game for some reason keeps randomly giving me an invite dialogue when launching the game so idk, add some stuff here for that
+                Plugin.Logger.LogInfo("????");
+                SteamFriends.ActivateGameOverlayInviteDialog(Networking.LobbyID.Value); // This will work great on LAN without a LobbyID!
+            });
 
             // Leave
             GameObject leaveButton = GameObject.Instantiate(__instance.buttons[0].gameObject, onlineButtons.transform);
