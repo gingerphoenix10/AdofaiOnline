@@ -290,9 +290,10 @@ public static class Networking
                 else if (ADOBase.controller.gameworld && data[2] == 0x01)
                 {
                     HitMargin margin = (HitMargin)data[3];
-                    int seqId = BitConverter.ToInt32(data, 4);
-                    float exitAngle = BitConverter.ToSingle(data, 4 + sizeof(int));
-                    double angle = BitConverter.ToDouble(data, 4 + sizeof(int) + sizeof(float));
+                    bool isCW = Convert.ToBoolean(data[4]);
+                    int seqId = BitConverter.ToInt32(data, 5);
+                    float exitAngle = BitConverter.ToSingle(data, 5 + sizeof(int));
+                    double angle = BitConverter.ToDouble(data, 5 + sizeof(int) + sizeof(float));
                     //Plugin.Logger.LogInfo($"Floor {seqId}, exitAngle {exitAngle}");
 
                     scrFloor floor = ADOBase.lm.listFloors[seqId];
@@ -304,6 +305,7 @@ public static class Networking
                     plr.chosenPlanet.next.snappedLastAngle += angle - plr.chosenPlanet.next.angle;
                     plr.Hit();
                     ADOBase.controller.noFailInfiniteMargin = prevInfMargin;
+                    plr.planetarySystem.isCW = isCW;
                     plr.planetarySystem.chosenPlanet.transform.position = floor.transform.position; // Attempt to fix desync in some cases
                 }
                 break;

@@ -32,22 +32,23 @@ internal static class scrPlanetPatch
         return true;
     }
 
-    [HarmonyPrefix]
+    [HarmonyPostfix]
     [HarmonyPatch(nameof(scrPlanet.MoveToNextFloor))]
-    internal static void MoveToNextFloorPrefix(scrPlanet __instance, scrFloor floor, float exitAngle, HitMargin hitMargin)
+    internal static void MoveToNextFloorPostfix(scrPlanet __instance, scrFloor floor, float exitAngle, HitMargin hitMargin)
     {
         if (!Networking.IsConnected || !ADOBase.controller.gameworld)
             return;
 
         if (__instance.player.playerID == Networking.localPlayer.PlayerID)
         {
-            byte[] data = new byte[3 + sizeof(int) + sizeof(float) + sizeof(double)];
+            byte[] data = new byte[4 + sizeof(int) + sizeof(float) + sizeof(double)];
             data[0] = (byte)PacketType.Update;
             data[1] = 0x01;
             data[2] = (byte)hitMargin;
-            Buffer.BlockCopy(BitConverter.GetBytes(floor.seqID), 0, data, 3, sizeof(int));
-            Buffer.BlockCopy(BitConverter.GetBytes(exitAngle), 0, data, 3 + sizeof(int), sizeof(float));
-            Buffer.BlockCopy(BitConverter.GetBytes(__instance.next.angle), 0, data, 3 + sizeof(int) + sizeof(float), sizeof(double));
+            data[3] = Convert.ToByte(__instance.planetarySystem.isCW);
+            Buffer.BlockCopy(BitConverter.GetBytes(floor.seqID), 0, data, 4, sizeof(int));
+            Buffer.BlockCopy(BitConverter.GetBytes(exitAngle), 0, data, 4 + sizeof(int), sizeof(float));
+            Buffer.BlockCopy(BitConverter.GetBytes(__instance.next.angle), 0, data, 4 + sizeof(int) + sizeof(float), sizeof(double));
             Networking.SendToHost(data);
         }
     }
