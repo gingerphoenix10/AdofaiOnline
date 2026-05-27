@@ -3,5 +3,4 @@ This is an experimental plugin made for [A Dance of Fire and Ice](https://store.
 
 Notes:
 - The mod is still in very early development, with messy code and many bugs. These will (hopefully) be sorted with time
-- This currently requires the Beta branch of ADOFAI, since Local co-op isn't released to the main branch yet
-- Requires [BepInEx](https://github.com/bepinex/bepinex) or [UnityModManager](https://github.com/newman55/unity-mod-manager) set to Assembly mode. DoorstopProxy will cause crashes on the latest version of the Alpha branch
+- Requires [BepInEx](https://github.com/bepinex/bepinex) or [UnityModManager](https://github.com/newman55/unity-mod-manager) set to Assembly mode. DoorstopProxy will cause crashes on the latest version of ADOFAI
